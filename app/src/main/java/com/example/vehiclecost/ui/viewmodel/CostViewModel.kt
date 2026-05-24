@@ -46,10 +46,11 @@ class CostViewModel(
     val currentMonthCosts: StateFlow<List<VehicleCost>> = combine(currentMonthStr, _selectedCategoryFilter) { month, category ->
         Pair(month, category)
     }.flatMapLatest { (month, category) ->
-        if (category == "全部") {
-            costDao.getCostsByPeriod("$month%")
-        } else {
-            costDao.getCostsByPeriodAndCategory("$month%", category)
+        when (category) {
+            "全部" -> costDao.getCostsByPeriod("$month%")
+            "固定停车" -> costDao.getCostsByPeriodAndTag("$month%", "固定月租")
+            "临时停车" -> costDao.getCostsByPeriodAndTag("$month%", "临时停车")
+            else -> costDao.getCostsByPeriodAndCategory("$month%", category)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
