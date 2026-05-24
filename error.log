@@ -1,0 +1,53 @@
+
+> Configure project :app
+WARNING: The option setting 'android.disallowKotlinSourceSets=false' is experimental.
+The current default is 'true'.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+
+> Task :app:compileDebugJavaWithJavac FAILED
+/Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:32: 错误: CostDao_Impl不是抽象的, 并且未覆盖CostDao中的抽象方法getAllCostsSnapshot(Continuation<? super List<VehicleCost>>)
+public final class CostDao_Impl implements CostDao {
+             ^
+/Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:196: 错误: 名称冲突: CostDao_Impl 中的 getAllCostsSnapshot(Continuation<List<VehicleCost>>) 和 CostDao 中的 getAllCostsSnapshot(Continuation<? super List<VehicleCost>>) 具有相同疑符, 但两者均不覆盖对方
+  public Object getAllCostsSnapshot(final Continuation<List<VehicleCost>> $completion) {
+                ^
+/Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:195: 错误: 方法不会覆盖或实现超类型的方法
+  @Override
+  ^
+3 个错误
+
+[Incubating] Problems report is available at: file:///Users/anqi/AndroidStudioProjects/VehicleCost/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler output below.
+  /Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:196: 错误: 名称冲突: CostDao_Impl 中的 getAllCostsSnapshot(Continuation<List<VehicleCost>>) 和 CostDao 中的 getAllCostsSnapshot(Continuation<? super List<VehicleCost>>) 具有相同疑符, 但两者均不覆盖对方
+    public Object getAllCostsSnapshot(final Continuation<List<VehicleCost>> $completion) {
+                  ^
+  /Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:32: 错误: CostDao_Impl不是抽象的, 并且未覆盖CostDao中的抽象方法getAllCostsSnapshot(Continuation<? super List<VehicleCost>>)
+  public final class CostDao_Impl implements CostDao {
+               ^
+  /Users/anqi/AndroidStudioProjects/VehicleCost/app/build/generated/ksp/debug/java/com/example/vehiclecost/data/dao/CostDao_Impl.java:195: 错误: 方法不会覆盖或实现超类型的方法
+    @Override
+    ^
+  3 个错误
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+BUILD FAILED in 699ms
+9 actionable tasks: 1 executed, 8 up-to-date

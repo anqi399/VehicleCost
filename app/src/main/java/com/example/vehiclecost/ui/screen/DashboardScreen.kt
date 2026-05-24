@@ -114,18 +114,23 @@ fun DashboardScreen(viewModel: CostViewModel) {
                     SegmentedButton(
                         selected = currentPeriod == DashboardPeriod.WEEK,
                         onClick = { viewModel.setDashboardPeriod(DashboardPeriod.WEEK) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 4)
                     ) { Text("本周") }
                     SegmentedButton(
                         selected = currentPeriod == DashboardPeriod.MONTH,
                         onClick = { viewModel.setDashboardPeriod(DashboardPeriod.MONTH) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 4)
                     ) { Text("本月") }
                     SegmentedButton(
                         selected = currentPeriod == DashboardPeriod.YEAR,
                         onClick = { viewModel.setDashboardPeriod(DashboardPeriod.YEAR) },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 4)
                     ) { Text("本年") }
+                    SegmentedButton(
+                        selected = currentPeriod == DashboardPeriod.ALL,
+                        onClick = { viewModel.setDashboardPeriod(DashboardPeriod.ALL) },
+                        shape = SegmentedButtonDefaults.itemShape(index = 3, count = 4)
+                    ) { Text("全部") }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

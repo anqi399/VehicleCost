@@ -33,6 +33,7 @@ fun SettingsScreen(viewModel: CostViewModel) {
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
     var isImporting by remember { mutableStateOf(false) }
+    var showImportConfirmDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = purchaseDate ?: System.currentTimeMillis()
@@ -90,15 +91,7 @@ fun SettingsScreen(viewModel: CostViewModel) {
                 leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
                 modifier = Modifier.clickable { 
                     if (!isImporting) {
-                        isImporting = true
-                        viewModel.importLegacyData(context) { success, count ->
-                            isImporting = false
-                            if (success) {
-                                Toast.makeText(context, "成功导入 $count 条记录！", Toast.LENGTH_LONG).show()
-                            } else {
-                                Toast.makeText(context, "导入失败", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                        showImportConfirmDialog = true
                     }
                 }
             )
@@ -125,6 +118,41 @@ fun SettingsScreen(viewModel: CostViewModel) {
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    if (showImportConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportConfirmDialog = false },
+            title = { Text("确认导入历史账单") },
+            text = { Text("当前导入为追加操作。如果您之前已经成功导入过该模板数据，再次点击会导致账单重复。您确定要执行导入吗？") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showImportConfirmDialog = false
+                        isImporting = true
+                        viewModel.importLegacyData(context) { success, count ->
+                            isImporting = false
+                            if (success) {
+                                if (count > 0) {
+                                    Toast.makeText(context, "成功追加导入 $count 条记录！", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(context, "模板数据均已存在，无新记录导入", Toast.LENGTH_LONG).show()
+                                }
+                            } else {
+                                Toast.makeText(context, "导入失败，请检查文件格式", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                ) {
+                    Text("执行导入")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportConfirmDialog = false }) {
+                    Text("取消")
+                }
+            }
+        )
     }
 }
 

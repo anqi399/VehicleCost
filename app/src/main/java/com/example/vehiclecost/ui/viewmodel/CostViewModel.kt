@@ -21,7 +21,7 @@ data class CategoryBreakdown(
     val percentage: Float
 )
 
-enum class DashboardPeriod { WEEK, MONTH, YEAR }
+enum class DashboardPeriod { WEEK, MONTH, YEAR, ALL }
 
 data class TrendData(val diff: Double, val isPositive: Boolean, val hasHistory: Boolean)
 
@@ -68,6 +68,13 @@ class CostViewModel(
         cal.set(Calendar.MILLISECOND, 0)
         
         when (period) {
+            DashboardPeriod.ALL -> {
+                if (offset == 0) {
+                    return Pair(0L, Long.MAX_VALUE)
+                } else {
+                    return Pair(0L, 0L)
+                }
+            }
             DashboardPeriod.WEEK -> {
                 // Determine first day of week correctly (Mon vs Sun based on locale)
                 cal.firstDayOfWeek = Calendar.MONDAY
@@ -174,6 +181,7 @@ class CostViewModel(
                 val jsonStr = context.assets.open("import_template.json").bufferedReader().use { it.readText() }
                 val jsonArray = org.json.JSONArray(jsonStr)
                 val parseFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val existingCosts = costDao.getAllCostsSnapshot()
                 val costsToInsert = mutableListOf<VehicleCost>()
                 
                 for (i in 0 until jsonArray.length()) {
@@ -186,27 +194,32 @@ class CostViewModel(
                     
                     val parsedDate = parseFormat.parse(dateStr)
                     if (parsedDate != null) {
-                        costsToInsert.add(
-                            VehicleCost(
-                                amount = amount,
-                                category = category,
-                                date = parsedDate.time,
-                                monthStr = dateFormat.format(parsedDate),
-                                note = note,
-                                tag = tag
+                        val isDuplicate = existingCosts.any {
+                            it.date == parsedDate.time &&
+                            it.amount == amount &&
+                            it.category == category &&
+                            it.note == note
+                        }
+                        
+                        if (!isDuplicate) {
+                            costsToInsert.add(
+                                VehicleCost(
+                                    amount = amount,
+                                    category = category,
+                                    date = parsedDate.time,
+                                    monthStr = dateFormat.format(parsedDate),
+                                    note = note,
+                                    tag = tag
+                                )
                             )
-                        )
+                        }
                     }
                 }
                 if (costsToInsert.isNotEmpty()) {
                     costDao.insertCosts(costsToInsert)
-                    kotlinx.coroutines.withContext(Dispatchers.Main) {
-                        onComplete(true, costsToInsert.size)
-                    }
-                } else {
-                    kotlinx.coroutines.withContext(Dispatchers.Main) {
-                        onComplete(false, 0)
-                    }
+                }
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    onComplete(true, costsToInsert.size)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

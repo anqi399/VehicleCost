@@ -25,6 +25,9 @@ interface CostDao {
     @Query("SELECT * FROM costs ORDER BY date DESC")
     fun getAllCosts(): Flow<List<VehicleCost>>
 
+    @Query("SELECT * FROM costs")
+    fun getAllCostsSnapshot(): List<VehicleCost>
+
     @Query("SELECT * FROM costs WHERE monthStr LIKE :periodPattern ORDER BY date DESC")
     fun getCostsByPeriod(periodPattern: String): Flow<List<VehicleCost>>
 

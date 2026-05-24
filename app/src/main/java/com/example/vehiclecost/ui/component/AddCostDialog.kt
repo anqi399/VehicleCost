@@ -49,29 +49,7 @@ fun AddCostDialog(
     }
 
     var dateMillis by remember { 
-        mutableStateOf(
-            initialCost?.date ?: run {
-                if (selectedMonthPattern.length == 7) {
-                    val format = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-                    val parsedDate = format.parse(selectedMonthPattern)
-                    if (parsedDate != null) {
-                        val currentCal = Calendar.getInstance()
-                        val selectedCal = Calendar.getInstance().apply { time = parsedDate }
-                        if (currentCal.get(Calendar.YEAR) == selectedCal.get(Calendar.YEAR) &&
-                            currentCal.get(Calendar.MONTH) == selectedCal.get(Calendar.MONTH)) {
-                            System.currentTimeMillis() // It's current month, use today
-                        } else {
-                            // It's a past/future month, default to 1st of that month
-                            selectedCal.timeInMillis
-                        }
-                    } else {
-                        System.currentTimeMillis()
-                    }
-                } else {
-                    System.currentTimeMillis()
-                }
-            }
-        ) 
+        mutableStateOf(initialCost?.date ?: System.currentTimeMillis()) 
     }
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     var showDatePicker by remember { mutableStateOf(false) }
