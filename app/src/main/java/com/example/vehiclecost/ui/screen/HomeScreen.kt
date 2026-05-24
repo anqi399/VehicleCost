@@ -109,7 +109,8 @@ fun HomeScreen(viewModel: CostViewModel) {
                                 Text(
                                     text = dateStr,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -189,8 +190,6 @@ fun HomeScreen(viewModel: CostViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CostItem(cost: VehicleCost, onEdit: () -> Unit, onDelete: () -> Unit) {
-    val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
             if (it == SwipeToDismissBoxValue.EndToStart) {
@@ -248,14 +247,16 @@ fun CostItem(cost: VehicleCost, onEdit: () -> Unit, onDelete: () -> Unit) {
                     }
                 }
             },
-            supportingContent = { 
-                Column {
-                    Text(dateFormat.format(Date(cost.date)))
-                    if (cost.note.isNotBlank()) {
-                        Text(cost.note, maxLines = 1)
-                    }
+            supportingContent = if (cost.note.isNotBlank()) {
+                {
+                    Text(
+                        text = cost.note, 
+                        maxLines = 1,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
                 }
-            },
+            } else null,
             trailingContent = { 
                 Text(
                     text = String.format(Locale.getDefault(), "-%.2f", cost.amount),
