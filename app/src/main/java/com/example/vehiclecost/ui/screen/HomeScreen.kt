@@ -46,7 +46,7 @@ fun HomeScreen(viewModel: CostViewModel) {
         "${selectedMonth.substring(0, 4)}年${selectedMonth.substring(5, 7)}月"
     }
 
-    val filterCategories = listOf("全部", "加油", "充电", "洗车", "保养", "保险", "停车", "违章", "车用品", "其他")
+    val filterCategories = listOf("全部", "加油", "停车", "洗车", "车用品", "保险", "保养", "违章", "车用品", "其他")
 
     Scaffold(
         topBar = {

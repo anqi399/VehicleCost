@@ -167,6 +167,55 @@ class CostViewModel(
             costDao.updateCost(cost.copy(monthStr = updatedMonthStr))
         }
     }
+
+    fun importLegacyData(context: android.content.Context, onComplete: (Boolean, Int) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val jsonStr = context.assets.open("import_template.json").bufferedReader().use { it.readText() }
+                val jsonArray = org.json.JSONArray(jsonStr)
+                val parseFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val costsToInsert = mutableListOf<VehicleCost>()
+                
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val dateStr = obj.getString("dateStr")
+                    val category = obj.getString("category")
+                    val amount = obj.getDouble("amount")
+                    val note = obj.optString("note", "")
+                    val tag = obj.optString("tag", "")
+                    
+                    val parsedDate = parseFormat.parse(dateStr)
+                    if (parsedDate != null) {
+                        costsToInsert.add(
+                            VehicleCost(
+                                amount = amount,
+                                category = category,
+                                date = parsedDate.time,
+                                monthStr = dateFormat.format(parsedDate),
+                                note = note,
+                                tag = tag
+                            )
+                        )
+                    }
+                }
+                if (costsToInsert.isNotEmpty()) {
+                    costDao.insertCosts(costsToInsert)
+                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                        onComplete(true, costsToInsert.size)
+                    }
+                } else {
+                    kotlinx.coroutines.withContext(Dispatchers.Main) {
+                        onComplete(false, 0)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    onComplete(false, 0)
+                }
+            }
+        }
+    }
 }
 
 class CostViewModelFactory(

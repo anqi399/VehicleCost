@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Add
+import android.widget.Toast
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,7 @@ fun SettingsScreen(viewModel: CostViewModel) {
     val purchaseDate by viewModel.purchaseDateFlow.collectAsStateWithLifecycle()
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
+    var isImporting by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = purchaseDate ?: System.currentTimeMillis()
@@ -79,6 +82,25 @@ fun SettingsScreen(viewModel: CostViewModel) {
                 supportingContent = { Text("用于主页顶部展示") },
                 leadingContent = { Icon(Icons.Default.Face, contentDescription = null) },
                 modifier = Modifier.clickable { launcher.launch("image/*") }
+            )
+            HorizontalDivider()
+            ListItem(
+                headlineContent = { Text("一键导入历史账单") },
+                supportingContent = { Text(if (isImporting) "正在导入..." else "从内置的 JSON 模板批量恢复数据") },
+                leadingContent = { Icon(Icons.Default.Add, contentDescription = null) },
+                modifier = Modifier.clickable { 
+                    if (!isImporting) {
+                        isImporting = true
+                        viewModel.importLegacyData(context) { success, count ->
+                            isImporting = false
+                            if (success) {
+                                Toast.makeText(context, "成功导入 $count 条记录！", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "导入失败", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
             )
             HorizontalDivider()
         }

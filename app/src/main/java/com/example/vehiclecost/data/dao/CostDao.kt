@@ -13,6 +13,9 @@ interface CostDao {
     @Insert
     fun insertCost(cost: VehicleCost)
 
+    @Insert
+    fun insertCosts(costs: List<VehicleCost>)
+
     @Delete
     fun deleteCost(cost: VehicleCost)
 
