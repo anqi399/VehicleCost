@@ -25,6 +25,15 @@ interface CostDao {
     @Query("SELECT * FROM costs WHERE monthStr LIKE :periodPattern ORDER BY date DESC")
     fun getCostsByPeriod(periodPattern: String): Flow<List<VehicleCost>>
 
+    @Query("SELECT * FROM costs WHERE monthStr LIKE :periodPattern AND category = :category ORDER BY date DESC")
+    fun getCostsByPeriodAndCategory(periodPattern: String, category: String): Flow<List<VehicleCost>>
+
     @Query("SELECT COALESCE(SUM(amount), 0.0) FROM costs WHERE monthStr LIKE :periodPattern")
     fun getTotalAmountByPeriod(periodPattern: String): Flow<Double>
+
+    @Query("SELECT * FROM costs WHERE date BETWEEN :startDate AND :endDate ORDER BY date DESC")
+    fun getCostsBetween(startDate: Long, endDate: Long): Flow<List<VehicleCost>>
+
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM costs WHERE date BETWEEN :startDate AND :endDate")
+    fun getTotalAmountBetween(startDate: Long, endDate: Long): Flow<Double>
 }

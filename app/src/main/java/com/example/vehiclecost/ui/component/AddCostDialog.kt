@@ -9,6 +9,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import java.text.SimpleDateFormat
@@ -73,6 +77,13 @@ fun AddCostDialog(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+    
+    val focusRequester = remember { FocusRequester() }
+    val haptic = LocalHapticFeedback.current
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -108,7 +119,7 @@ fun AddCostDialog(
                     onValueChange = { amountStr = it },
                     label = { Text("金额 (必填)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     singleLine = true
                 )
 
@@ -163,6 +174,7 @@ fun AddCostDialog(
                 onClick = {
                     val amount = amountStr.toDoubleOrNull()
                     if (amount != null && amount > 0) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onConfirm(amount, selectedCategory, dateMillis, note, selectedTag)
                     }
                 },

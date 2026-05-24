@@ -10,6 +10,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -18,12 +21,24 @@ import com.example.vehiclecost.ui.screen.DashboardScreen
 import com.example.vehiclecost.ui.screen.HomeScreen
 import com.example.vehiclecost.ui.screen.SettingsScreen
 import com.example.vehiclecost.ui.viewmodel.CostViewModel
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.vehiclecost.ui.component.AddCostDialog
 
 @Composable
 fun MainApp(viewModel: CostViewModel) {
     val navController = rememberNavController()
+    val coroutineScope = rememberCoroutineScope()
     var showAddDialog by remember { mutableStateOf(false) }
+    var showSuccessToast by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -100,7 +115,29 @@ fun MainApp(viewModel: CostViewModel) {
             onConfirm = { amount, category, date, note, tag ->
                 viewModel.addCost(amount, category, date, note, tag)
                 showAddDialog = false
+                showSuccessToast = true
+                coroutineScope.launch {
+                    delay(800)
+                    showSuccessToast = false
+                }
             }
         )
+    }
+
+    if (showSuccessToast) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            AnimatedVisibility(
+                visible = showSuccessToast,
+                enter = fadeIn() + scaleIn(),
+                exit = fadeOut() + scaleOut()
+            ) {
+                Surface(
+                    color = Color.Black.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("✅ 保存成功", color = Color.White, modifier = Modifier.padding(16.dp))
+                }
+            }
+        }
     }
 }

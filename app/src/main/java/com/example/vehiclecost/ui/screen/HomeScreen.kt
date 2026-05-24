@@ -1,9 +1,11 @@
 package com.example.vehiclecost.ui.screen
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -27,11 +29,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(viewModel: CostViewModel) {
     val currentMonthCosts by viewModel.currentMonthCosts.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
+    val selectedCategoryFilter by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
 
     var showMonthPicker by remember { mutableStateOf(false) }
     var editingCost by remember { mutableStateOf<VehicleCost?>(null) }
@@ -42,6 +45,8 @@ fun HomeScreen(viewModel: CostViewModel) {
     } else {
         "${selectedMonth.substring(0, 4)}年${selectedMonth.substring(5, 7)}月"
     }
+
+    val filterCategories = listOf("全部", "加油", "充电", "洗车", "保养", "保险", "停车", "违章", "车用品", "其他")
 
     Scaffold(
         topBar = {
@@ -70,23 +75,55 @@ fun HomeScreen(viewModel: CostViewModel) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Category Filter Chips
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(filterCategories) { category ->
+                    FilterChip(
+                        selected = category == selectedCategoryFilter,
+                        onClick = { viewModel.setCategoryFilter(category) },
+                        label = { Text(category) }
+                    )
+                }
+            }
+
             if (currentMonthCosts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("该时间段暂无记录", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
+                val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+                val grouped = currentMonthCosts.groupBy { dateFormat.format(Date(it.date)) }
+
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 80.dp) // padding for FAB
                 ) {
-                    items(
-                        items = currentMonthCosts,
-                        key = { it.id }
-                    ) { cost ->
-                        CostItem(
-                            cost = cost,
-                            onEdit = { editingCost = cost },
-                            onDelete = { costToDelete = cost }
-                        )
+                    grouped.forEach { (dateStr, costs) ->
+                        stickyHeader {
+                            Surface(
+                                color = MaterialTheme.colorScheme.background.copy(alpha = 0.95f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = dateStr,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        items(
+                            items = costs,
+                            key = { it.id }
+                        ) { cost ->
+                            CostItem(
+                                cost = cost,
+                                onEdit = { editingCost = cost },
+                                onDelete = { costToDelete = cost }
+                            )
+                        }
                     }
                 }
             }
@@ -152,7 +189,7 @@ fun HomeScreen(viewModel: CostViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CostItem(cost: VehicleCost, onEdit: () -> Unit, onDelete: () -> Unit) {
-    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()) }
+    val dateFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
