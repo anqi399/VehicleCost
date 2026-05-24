@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Share
 import android.widget.Toast
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -48,6 +49,21 @@ fun SettingsScreen(viewModel: CostViewModel) {
             val copiedUri = copyToInternalStorage(context, it)
             if (copiedUri != null) {
                 viewModel.saveCarPhotoUri(copiedUri)
+            }
+        }
+    }
+
+    // Export Launcher
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.exportDataToUri(context, it) { success ->
+                if (success) {
+                    Toast.makeText(context, "✅ 备份导出成功！", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "❌ 导出失败", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -93,6 +109,16 @@ fun SettingsScreen(viewModel: CostViewModel) {
                     if (!isImporting) {
                         showImportConfirmDialog = true
                     }
+                }
+            )
+            HorizontalDivider()
+            ListItem(
+                headlineContent = { Text("备份与导出") },
+                supportingContent = { Text("将所有账单导出为 JSON 文件以便备份") },
+                leadingContent = { Icon(Icons.Default.Share, contentDescription = null) },
+                modifier = Modifier.clickable { 
+                    val dateStr = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+                    exportLauncher.launch("vehicle_cost_export_$dateStr.json") 
                 }
             )
             HorizontalDivider()

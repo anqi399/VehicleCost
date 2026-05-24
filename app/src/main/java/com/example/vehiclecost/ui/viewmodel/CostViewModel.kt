@@ -230,6 +230,40 @@ class CostViewModel(
             }
         }
     }
+
+    fun exportDataToUri(context: android.content.Context, uri: android.net.Uri, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val existingCosts = costDao.getAllCostsSnapshot()
+                val jsonArray = org.json.JSONArray()
+                
+                for (cost in existingCosts) {
+                    val obj = org.json.JSONObject()
+                    val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(cost.date))
+                    obj.put("dateStr", dateStr)
+                    obj.put("category", cost.category)
+                    obj.put("amount", cost.amount)
+                    if (cost.note.isNotBlank()) obj.put("note", cost.note)
+                    if (cost.tag.isNotBlank()) obj.put("tag", cost.tag)
+                    jsonArray.put(obj)
+                }
+
+                val jsonStr = jsonArray.toString(2)
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonStr.toByteArray())
+                }
+                
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    onComplete(true)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                kotlinx.coroutines.withContext(Dispatchers.Main) {
+                    onComplete(false)
+                }
+            }
+        }
+    }
 }
 
 class CostViewModelFactory(
