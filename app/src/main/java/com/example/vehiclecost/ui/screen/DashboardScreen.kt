@@ -229,7 +229,7 @@ fun DashboardScreen(viewModel: CostViewModel) {
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                "${(item.percentage * 100).toInt()}%", 
+                                                String.format(Locale.getDefault(), "%.1f%%", item.percentage * 100), 
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.primary
                                             )
