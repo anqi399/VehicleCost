@@ -39,8 +39,6 @@
   { "dateStr": "2024-11-11", "category": "停车", "amount": 100.0, "tag": "固定月租" },
   { "dateStr": "2024-12-27", "category": "停车", "amount": 100.0, "tag": "固定月租" },
   { "dateStr": "2024-12-11", "category": "停车", "amount": 100.0, "tag": "固定月租" },
-  { "dateStr": "2026-07-07", "category": "停车", "amount": 10.0, "tag": "临时停车" },
-  { "dateStr": "2026-07-19", "category": "停车", "amount": 10.0, "tag": "临时停车" },
   { "dateStr": "2026-05-17", "category": "停车", "amount": 15.0, "tag": "临时停车" },
   { "dateStr": "2026-05-16", "category": "停车", "amount": 15.0, "tag": "临时停车" },
   { "dateStr": "2026-05-14", "category": "停车", "amount": 15.0, "tag": "临时停车" },

@@ -208,9 +208,9 @@ fun DashboardScreen(viewModel: CostViewModel) {
 
                         Spacer(modifier = Modifier.width(24.dp))
 
-                        // Top Categories List
+                        // Categories List
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            categoryBreakdown.take(3).forEachIndexed { index, item ->
+                            categoryBreakdown.forEachIndexed { index, item ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Box(
                                         modifier = Modifier
