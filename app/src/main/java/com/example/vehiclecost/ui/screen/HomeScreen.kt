@@ -4,11 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -33,11 +31,8 @@ import java.util.Locale
 @Composable
 fun HomeScreen(viewModel: CostViewModel) {
     val currentMonthCosts by viewModel.currentMonthCosts.collectAsStateWithLifecycle()
-    val currentMonthTotal by viewModel.currentMonthTotal.collectAsStateWithLifecycle()
     val selectedMonth by viewModel.selectedMonth.collectAsStateWithLifecycle()
-    val categoryBreakdown by viewModel.categoryBreakdown.collectAsStateWithLifecycle()
 
-    var showAddDialog by remember { mutableStateOf(false) }
     var showMonthPicker by remember { mutableStateOf(false) }
     var editingCost by remember { mutableStateOf<VehicleCost?>(null) }
     var costToDelete by remember { mutableStateOf<VehicleCost?>(null) }
@@ -51,17 +46,23 @@ fun HomeScreen(viewModel: CostViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("03成长记") },
+                title = { 
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { showMonthPicker = true }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(displayMonth, style = MaterialTheme.typography.titleLarge)
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Month")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "记一笔")
-            }
         }
     ) { paddingValues ->
         Column(
@@ -69,94 +70,6 @@ fun HomeScreen(viewModel: CostViewModel) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Top Dashboard Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    // Month Selector
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { showMonthPicker = true }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = displayMonth,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Select Month")
-                    }
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(if (selectedMonth.length == 4) "年度总花销 (元)" else "本月总花销 (元)", style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = String.format(Locale.getDefault(), "%.2f", currentMonthTotal),
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    // Category Breakdown Overview
-                    if (categoryBreakdown.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            items(categoryBreakdown) { item ->
-                                Surface(
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Text(item.category, style = MaterialTheme.typography.bodySmall)
-                                        Text(
-                                            text = "¥${String.format(Locale.getDefault(), "%.0f", item.amount)}",
-                                            fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            text = "${(item.percentage * 100).toInt()}%",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                                        )
-                                        LinearProgressIndicator(
-                                            progress = { item.percentage },
-                                            modifier = Modifier.width(48.dp).height(4.dp).padding(top = 2.dp),
-                                            color = MaterialTheme.colorScheme.primary,
-                                            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // List of costs
-            Text(
-                text = "历史记录 (向左滑动删除)",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-
             if (currentMonthCosts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("该时间段暂无记录", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -181,26 +94,20 @@ fun HomeScreen(viewModel: CostViewModel) {
     }
 
     // Dialogs
-    if (showAddDialog || editingCost != null) {
+    if (editingCost != null) {
         AddCostDialog(
             initialCost = editingCost,
-            onDismiss = { 
-                showAddDialog = false
-                editingCost = null
-            },
-            onConfirm = { amount, category, date, note ->
-                if (editingCost != null) {
-                    val updatedCost = editingCost!!.copy(
-                        amount = amount,
-                        category = category,
-                        date = date,
-                        note = note
-                    )
-                    viewModel.updateCost(updatedCost)
-                } else {
-                    viewModel.addCost(amount, category, date, note)
-                }
-                showAddDialog = false
+            selectedMonthPattern = selectedMonth,
+            onDismiss = { editingCost = null },
+            onConfirm = { amount, category, date, note, tag ->
+                val updatedCost = editingCost!!.copy(
+                    amount = amount,
+                    category = category,
+                    date = date,
+                    note = note,
+                    tag = tag
+                )
+                viewModel.updateCost(updatedCost)
                 editingCost = null
             }
         )
@@ -250,7 +157,6 @@ fun CostItem(cost: VehicleCost, onEdit: () -> Unit, onDelete: () -> Unit) {
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = {
             if (it == SwipeToDismissBoxValue.EndToStart) {
-                // ALWAYS return false to snap back, but trigger the delete confirmation
                 onDelete()
                 false
             } else {
@@ -286,7 +192,25 @@ fun CostItem(cost: VehicleCost, onEdit: () -> Unit, onDelete: () -> Unit) {
         ListItem(
             modifier = Modifier.clickable { onEdit() },
             colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
-            headlineContent = { Text(cost.category, fontWeight = FontWeight.Bold) },
+            headlineContent = { 
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(cost.category, fontWeight = FontWeight.Bold)
+                    if (cost.tag.isNotBlank()) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        ) {
+                            Text(
+                                text = cost.tag,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            },
             supportingContent = { 
                 Column {
                     Text(dateFormat.format(Date(cost.date)))

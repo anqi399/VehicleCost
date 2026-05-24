@@ -67,21 +67,16 @@ fun YearMonthPicker(
                     val months = (1..12).toList()
                     items(months) { month ->
                         val isSelected = initialSelection == String.format("%04d-%02d", currentYear, month)
-                        FilledTonalButton(
-                            onClick = {
-                                onConfirm(String.format("%04d-%02d", currentYear, month))
-                            },
-                            colors = if (isSelected) {
-                                ButtonDefaults.filledTonalButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            } else {
-                                ButtonDefaults.filledTonalButtonColors()
-                            },
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Text("${month}月")
+                        if (isSelected) {
+                            Button(
+                                onClick = { onConfirm(String.format("%04d-%02d", currentYear, month)) },
+                                contentPadding = PaddingValues(0.dp)
+                            ) { Text("${month}月") }
+                        } else {
+                            TextButton(
+                                onClick = { onConfirm(String.format("%04d-%02d", currentYear, month)) },
+                                contentPadding = PaddingValues(0.dp)
+                            ) { Text("${month}月", color = MaterialTheme.colorScheme.onSurface) }
                         }
                     }
                 }

@@ -20,6 +20,7 @@ import java.util.Locale
 
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import com.example.vehiclecost.data.repository.SettingsRepository
 
 data class CategoryBreakdown(
     val category: String,
@@ -27,7 +28,10 @@ data class CategoryBreakdown(
     val percentage: Float
 )
 
-class CostViewModel(private val costDao: CostDao) : ViewModel() {
+class CostViewModel(
+    private val costDao: CostDao,
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
     private val currentMonthStr = MutableStateFlow(dateFormat.format(Date()))
@@ -78,7 +82,18 @@ class CostViewModel(private val costDao: CostDao) : ViewModel() {
             initialValue = emptyList()
         )
 
-    fun addCost(amount: Double, category: String, dateMillis: Long, note: String) {
+    val purchaseDateFlow = settingsRepository.purchaseDateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val carPhotoUriFlow = settingsRepository.carPhotoUriFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    fun savePurchaseDate(dateMillis: Long) {
+        viewModelScope.launch { settingsRepository.savePurchaseDate(dateMillis) }
+    }
+
+    fun saveCarPhotoUri(uri: String) {
+        viewModelScope.launch { settingsRepository.saveCarPhotoUri(uri) }
+    }
+
+    fun addCost(amount: Double, category: String, dateMillis: Long, note: String, tag: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
             val monthStr = dateFormat.format(Date(dateMillis))
             val cost = VehicleCost(
@@ -86,7 +101,8 @@ class CostViewModel(private val costDao: CostDao) : ViewModel() {
                 category = category,
                 date = dateMillis,
                 monthStr = monthStr,
-                note = note
+                note = note,
+                tag = tag
             )
             costDao.insertCost(cost)
         }
@@ -106,11 +122,14 @@ class CostViewModel(private val costDao: CostDao) : ViewModel() {
     }
 }
 
-class CostViewModelFactory(private val costDao: CostDao) : ViewModelProvider.Factory {
+class CostViewModelFactory(
+    private val costDao: CostDao,
+    private val settingsRepository: SettingsRepository
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CostViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CostViewModel(costDao) as T
+            return CostViewModel(costDao, settingsRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

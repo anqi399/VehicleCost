@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vehiclecost.data.AppDatabase
 import com.example.vehiclecost.ui.screen.HomeScreen
+import com.example.vehiclecost.data.repository.SettingsRepository
 import com.example.vehiclecost.ui.theme.VehicleCostTheme
 import com.example.vehiclecost.ui.viewmodel.CostViewModel
 import com.example.vehiclecost.ui.viewmodel.CostViewModelFactory
@@ -15,15 +16,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize Database
+        // Initialize Database and Settings
         val database = AppDatabase.getDatabase(applicationContext)
-        val factory = CostViewModelFactory(database.costDao())
+        val settingsRepository = SettingsRepository(applicationContext)
+        val factory = CostViewModelFactory(database.costDao(), settingsRepository)
 
         enableEdgeToEdge()
         setContent {
             VehicleCostTheme {
                 val viewModel: CostViewModel = viewModel(factory = factory)
-                HomeScreen(viewModel = viewModel)
+                MainApp(viewModel = viewModel)
             }
         }
     }
