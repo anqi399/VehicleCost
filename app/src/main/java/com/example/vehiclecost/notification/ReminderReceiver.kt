@@ -1,5 +1,6 @@
 package com.example.vehiclecost.notification
 
+import android.os.Build
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -18,13 +19,15 @@ class ReminderReceiver : BroadcastReceiver() {
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // 创建通知渠道
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "记账提醒",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        notificationManager.createNotificationChannel(channel)
+        // 创建通知渠道 (Android O+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "记账提醒",
+                NotificationManager.IMPORTANCE_DEFAULT
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
 
         // 点击通知打开 App
         val openIntent = Intent(context, MainActivity::class.java).apply {
