@@ -1,7 +1,10 @@
 package com.example.vehiclecost.ui.screen
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -18,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.vehiclecost.ui.viewmodel.CostViewModel
 import java.io.File
@@ -31,6 +35,7 @@ import java.util.Locale
 fun SettingsScreen(viewModel: CostViewModel) {
     val context = LocalContext.current
     val purchaseDate by viewModel.purchaseDateFlow.collectAsStateWithLifecycle()
+    val reminderEnabled by viewModel.reminderEnabledFlow.collectAsStateWithLifecycle()
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
     var isImporting by remember { mutableStateOf(false) }
@@ -40,12 +45,22 @@ fun SettingsScreen(viewModel: CostViewModel) {
         initialSelectedDateMillis = purchaseDate ?: System.currentTimeMillis()
     )
 
+    // Notification permission launcher (Android 13+)
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.setReminderEnabled(true)
+        } else {
+            Toast.makeText(context, "请在系统设置中允许通知权限", Toast.LENGTH_LONG).show()
+        }
+    }
+
     // Image Picker
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            // Copy to internal storage so we don't lose access
             val copiedUri = copyToInternalStorage(context, it)
             if (copiedUri != null) {
                 viewModel.saveCarPhotoUri(copiedUri)
@@ -93,6 +108,32 @@ fun SettingsScreen(viewModel: CostViewModel) {
                 modifier = Modifier.clickable { showDatePicker = true }
             )
             HorizontalDivider()
+
+            ListItem(
+                headlineContent = { Text("每日记账提醒") },
+                supportingContent = {
+                    Text(if (reminderEnabled) "每晚提醒记账" else "关闭")
+                },
+                leadingContent = {
+                    Switch(
+                        checked = reminderEnabled,
+                        onCheckedChange = { enabled ->
+                            if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                if (ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) != PackageManager.PERMISSION_GRANTED
+                                ) {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    return@Switch
+                                }
+                            }
+                            viewModel.setReminderEnabled(enabled)
+                        }
+                    )
+                }
+            )
+            HorizontalDivider()
             
             ListItem(
                 headlineContent = { Text("更换爱车照片") },
@@ -121,7 +162,6 @@ fun SettingsScreen(viewModel: CostViewModel) {
                     exportLauncher.launch("vehicle_cost_export_$dateStr.json") 
                 }
             )
-            HorizontalDivider()
         }
     }
 

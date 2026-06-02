@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -59,7 +59,7 @@ fun MainApp(viewModel: CostViewModel) {
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.List, contentDescription = "账单") },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "账单") },
                     label = { Text("账单") },
                     selected = currentRoute == "records",
                     onClick = {

@@ -1,10 +1,13 @@
 package com.example.vehiclecost.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.vehiclecost.data.dao.CostDao
 import com.example.vehiclecost.data.entity.VehicleCost
+import com.example.vehiclecost.notification.ReminderScheduler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.Dispatchers
@@ -27,8 +30,9 @@ data class TrendData(val diff: Double, val isPositive: Boolean, val hasHistory: 
 
 class CostViewModel(
     private val costDao: CostDao,
-    private val settingsRepository: SettingsRepository
-) : ViewModel() {
+    private val settingsRepository: SettingsRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val dateFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
     
@@ -77,7 +81,6 @@ class CostViewModel(
                 }
             }
             DashboardPeriod.WEEK -> {
-                // Determine first day of week correctly (Mon vs Sun based on locale)
                 cal.firstDayOfWeek = Calendar.MONDAY
                 cal.add(Calendar.WEEK_OF_YEAR, offset)
                 cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
@@ -155,6 +158,7 @@ class CostViewModel(
     // --- Settings & Base Ops ---
     val purchaseDateFlow = settingsRepository.purchaseDateFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     val carPhotoUriFlow = settingsRepository.carPhotoUriFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val reminderEnabledFlow = settingsRepository.reminderEnabledFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     fun savePurchaseDate(dateMillis: Long) { viewModelScope.launch { settingsRepository.savePurchaseDate(dateMillis) } }
     fun saveCarPhotoUri(uri: String) { viewModelScope.launch { settingsRepository.saveCarPhotoUri(uri) } }
@@ -182,7 +186,7 @@ class CostViewModel(
                 val jsonStr = context.assets.open("import_template.json").bufferedReader().use { it.readText() }
                 val jsonArray = org.json.JSONArray(jsonStr)
                 val parseFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                val existingCosts = costDao.getAllCostsSnapshot()
+                val existingCosts = costDao.getAllCosts().first()
                 val costsToInsert = mutableListOf<VehicleCost>()
                 
                 for (i in 0 until jsonArray.length()) {
@@ -234,7 +238,7 @@ class CostViewModel(
     fun exportDataToUri(context: android.content.Context, uri: android.net.Uri, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val existingCosts = costDao.getAllCostsSnapshot()
+                val existingCosts = costDao.getAllCosts().first()
                 val jsonArray = org.json.JSONArray()
                 
                 for (cost in existingCosts) {
@@ -264,16 +268,31 @@ class CostViewModel(
             }
         }
     }
+
+    // --- Daily Reminder ---
+    fun setReminderEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setReminderEnabled(enabled)
+            val context = getApplication<Application>()
+            if (enabled) {
+                ReminderScheduler.scheduleDailyReminder(context)
+            } else {
+                ReminderScheduler.cancelReminder(context)
+            }
+        }
+    }
+
 }
 
 class CostViewModelFactory(
     private val costDao: CostDao,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val application: Application
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(CostViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return CostViewModel(costDao, settingsRepository) as T
+            return CostViewModel(costDao, settingsRepository, application) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

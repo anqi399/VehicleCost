@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
         // Initialize Database and Settings
         val database = AppDatabase.getDatabase(applicationContext)
         val settingsRepository = SettingsRepository(applicationContext)
-        val factory = CostViewModelFactory(database.costDao(), settingsRepository)
+        val factory = CostViewModelFactory(database.costDao(), settingsRepository, application)
 
         enableEdgeToEdge()
         setContent {
