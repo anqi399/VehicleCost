@@ -32,6 +32,13 @@ abstract class AppDatabase : RoomDatabase() {
                     "vehicle_cost_database"
                 )
                 .addMigrations(MIGRATION_1_2)
+                .addCallback(object : RoomDatabase.Callback() {
+                    override fun onOpen(db: SupportSQLiteDatabase) {
+                        super.onOpen(db)
+                        db.execSQL("UPDATE costs SET category = '过路费' WHERE category = '充电'")
+                        db.execSQL("UPDATE costs SET category = '维修保养' WHERE category = '保养'")
+                    }
+                })
                 .build()
                 INSTANCE = instance
                 instance

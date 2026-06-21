@@ -192,7 +192,12 @@ class CostViewModel(
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
                     val dateStr = obj.getString("dateStr")
-                    val category = obj.getString("category")
+                    val rawCategory = obj.getString("category")
+                    val category = when (rawCategory) {
+                        "充电" -> "过路费"
+                        "保养" -> "维修保养"
+                        else -> rawCategory
+                    }
                     val amount = obj.getDouble("amount")
                     val note = obj.optString("note", "")
                     val tag = obj.optString("tag", "")

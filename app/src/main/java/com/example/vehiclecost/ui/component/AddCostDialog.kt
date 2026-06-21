@@ -33,7 +33,7 @@ fun AddCostDialog(
     var amountStr by remember { mutableStateOf(initialCost?.amount?.toString() ?: "") }
     var note by remember { mutableStateOf(initialCost?.note ?: "") }
     
-    val categories = listOf("加油", "停车", "洗车", "充电", "保养", "保险", "违章", "车用品", "其他")
+    val categories = listOf("加油", "停车", "洗车", "过路费", "维修保养", "保险", "违章", "车用品", "其他")
     var selectedCategory by remember { mutableStateOf(initialCost?.category ?: categories[0]) }
 
     val parkingTags = listOf("固定月租", "临时停车")
